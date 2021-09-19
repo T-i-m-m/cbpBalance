@@ -3,6 +3,9 @@
 
 import json, sys
 import pandas as pd
+from datetime import date
+from datetime import datetime
+
 from models.exchange.coinbase_pro.api import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
 
 def printHelp():
@@ -29,7 +32,11 @@ def printHelp():
     print ("\n")
 
 try:
-    if len(sys.argv) != 3 and sys.argv[1] != '--list':
+    
+    log_filename = "Rey-portfolio.csv"
+    market_filename = 'Rey-markets.list'
+    
+    if len(sys.argv) != 3 and sys.argv[1] != '--list' and sys.argv[1] != '--log':
         raise Exception(f"Arguments missing. E.g. base and quote currency (e.g. DOT EUR)")
 
     with open('config.json') as config_file:
@@ -51,7 +58,6 @@ try:
         portfolio_config = json_config[portfolio]
 
         if ('api_key' in portfolio_config and 'api_secret' in portfolio_config and 'api_pass' in portfolio_config):
-
             api_key = portfolio_config['api_key']
             api_secret = portfolio_config['api_secret']
             api_pass = portfolio_config['api_pass']
@@ -60,42 +66,93 @@ try:
             accounts = api.getAccounts()
 
             if sys.argv[1] == '--list':
+                total_balance = 0
+
                 for index, row in accounts.iterrows():
-                    print(row['currency'], '\t', round(float(row['balance']), 4))
+                    if (row['currency'] != 'EUR'):
+                        ticker = api.getTicker(row['currency'] + "-EUR")
+                        print(
+                            row['currency'], '\t',
+                            round(float(row['balance']), 2), '\t', 
+                            round(float(ticker.loc[0, 'price']), 2), '\t', 
+                            round(float(row['balance']) * float(ticker.loc[0, 'price']), 2)
+                        )
+                        total_balance += float(row['balance']) * float(ticker.loc[0, 'price'])    
+                print('\nEur\t', round(total_balance, 2), '\n')
+                
+            elif sys.argv[1] == '--log':
+                total_balance = 0
 
-            else:
-                    balanceBase = 0
-                    balanceQuote = 0
+                df = None        
+                df = pd.DataFrame([[datetime.now().strftime("%d/%m/%Y"), datetime.now().strftime("%H:%M"), total_balance]], columns=['date', 'time', 'total balance (EUR)'])    
+
+                with open(market_filename,'r') as market_file:
+                    markets = market_file.read().splitlines()
+                    #markets = market_file.readlines().rstrip('\n')
+
+                # iterate throug all markets defined in Rey-market.list
+                for market in markets:                    
+                    ticker = api.getTicker(market + "-EUR") 
+                    found = None
+                    
+                    #iterate through all currencies in coinbase portfolio
                     for index, row in accounts.iterrows():
-                        if row['currency'] == sys.argv[1]:
-                            balanceBase = float(row['balance'])
-                        if row['currency'] == sys.argv[2]:
-                            balanceQuote = float(row['balance'])
+                        if row['currency'] == market:
+                            found = index
+                    
+                    if found != None:
+                        df[market + ' balance'] =  float(accounts.loc[found, 'balance'])
+                        df[market + ' rate'] =  ticker.loc[0, 'price']
+                        df[market + ' value (EUR)'] =  float(accounts.loc[found, 'balance']) * float(ticker.loc[0, 'price'])
+                        total_balance += float(accounts.loc[found, 'balance']) * float(ticker.loc[0, 'price'])
 
-                    market = sys.argv[1] + "-" + sys.argv[2]
-                    product = api.getProduct(market)
-                    minBase = float(product['base_min_size'])
-                    minQuote = float(product['min_market_funds'])
-
-                    if balanceBase > minBase or balanceQuote > minQuote:
-                        sys.exit(0)
                     else:
-                        if balanceBase <= minBase:
-                            print('Not enough ', sys.argv[1])
-                        if balanceQuote <= minQuote:
-                            print('Not enough ', sys.argv[2])
-                        sys.exit(1)
-
+                        df[market + ' balance'] =  0.0
+                        df[market + ' rate'] =  ticker.loc[0, 'price']
+                        df[market + ' value (EUR)'] =  0.0
+                                
+                df.loc[0, 'total balance (EUR)'] = round(total_balance, 2)
+                print(df)
+        
+                # create file if it does not exist yet!
+                df.to_csv(log_filename)                
+                #df.to_csv(log_file, mode='a', header=False)
+        
+        
+                    
             else:
-                printHelp()
-                sys.exit()
+                balanceBase = 0
+                balanceQuote = 0
+                for index, row in accounts.iterrows():
+                    if row['currency'] == sys.argv[1]:
+                        balanceBase = float(row['balance'])
+                    if row['currency'] == sys.argv[2]:
+                        balanceQuote = float(row['balance'])
+                        
+                market = sys.argv[1] + "-" + sys.argv[2]
+                product = api.getProduct(market)
+                minBase = float(product['base_min_size'])
+                minQuote = float(product['min_market_funds'])
+
+                if balanceBase > minBase or balanceQuote > minQuote:
+                    sys.exit(0)
+                else:
+                    if balanceBase <= minBase:
+                        print('Not enough ', sys.argv[1])
+                    if balanceQuote <= minQuote:
+                        print('Not enough ', sys.argv[2])
+                    sys.exit(1)
+
+        else:
+            printHelp()
+            sys.exit()
 
             #break
 
-    except IOError as err:
-        print("IO Error:")
-        print (err)
-    except Exception as err:
-        print("Exception:")
-        print (err)
+except IOError as err:
+    print("IO Error:")
+    print (err)
+except Exception as err:
+    print("Exception:")
+    print (err)
     

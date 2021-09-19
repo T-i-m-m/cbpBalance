@@ -187,7 +187,20 @@ class AuthAPI(AuthAPIBase):
         except:
             return pd.DataFrame()
 
+    def getTicker(self, product: str) -> pd.DataFrame:
+        """Retrieves a specific product"""
 
+        # validates the product is syntactically correct
+        #p = re.compile(r"^[a-f0-9\-]{36,36}$")
+        #if not p.match(product):
+        #    self.handle_init_error("Coinbase Pro product is invalid")
+
+        try:
+            return self.authAPI("GET", f"products/{product}/ticker")
+        except:
+            return pd.DataFrame()
+            
+    """
     def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:
         """Retrives the market ticker"""
 
@@ -206,7 +219,7 @@ class AuthAPI(AuthAPIBase):
             return (str(self.getTime()), float(resp["price"]))
         else:
             return (now, 0.0)
-            
+    """       
             
     def getFees(self, market: str = "") -> pd.DataFrame:
         """Retrieves market fees"""
