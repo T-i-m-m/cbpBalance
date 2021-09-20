@@ -1,7 +1,10 @@
 {
-    "XXXXX" : {
-        "api_key" : "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "Portfolio" : {
+        "name" : "XXXXX",
+		"api_key" : "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
         "api_secret" : "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-        "api_pass" : "XXXXXXXXXX"
-    }
+        "api_pass" : "XXXXXXXXXX",
+        "log_file" : "logfile.csv",
+		"market_file" : "markets.list"
+	}
 }

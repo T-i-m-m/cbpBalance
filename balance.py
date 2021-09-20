@@ -13,15 +13,21 @@ def printHelp():
     print ('* Add 1 or more portfolios', "\n")
 
     print ('{')
-    print ('    "<portfolio_name>" : {')
+    print ('    "Portfolio" : {')
+    print ('        "name" : "<portfolio_name>",')
     print ('        "api_key" : "<coinbase_pro_api_key>",')
     print ('        "api_secret" : "<coinbase_pro_api_secret>",')
     print ('        "api_pass" : "<coinbase_pro_api_passphrase>",')
+    print ('        "log_file" : "<log_file>",')
+    print ('        "market_file" : "<market_list>",')
     print ('    },')
-    print ('    "<portfolio_name>" : {')
+    print ('    "Portfolio" : {')
+    print ('        "name" : "<portfolio_name>",')
     print ('        "api_key" : "<coinbase_pro_api_key>",')
     print ('        "api_secret" : "<coinbase_pro_api_secret>",')
     print ('        "api_pass" : "<coinbase_pro_api_passphrase>",')
+    print ('        "log_file" : "<log_file>",')
+    print ('        "market_file" : "<market_list>",')
     print ('    }')
     print ('}', "\n")
 
@@ -29,6 +35,8 @@ def printHelp():
     print ('<coinbase_pro_api_key> - Coinbase Pro API key for the portfolio')
     print ('<coinbase_pro_api_secret> - Coinbase Pro API secret for the portfolio')
     print ('<coinbase_pro_api_passphrase> - Coinbase Pro API passphrase for the portfolio')
+    print ('<log_file> - Path and name of log file')
+    print ('<market_list> - Path and name of market list file')
     print ("\n")
 
 try:
@@ -62,6 +70,9 @@ try:
             api_secret = portfolio_config['api_secret']
             api_pass = portfolio_config['api_pass']
             api = CBAuthAPI(api_key, api_secret, api_pass)
+
+            log_filename = portfolio_config['log_file']
+            market_filename = portfolio_config['market_file']
 
             accounts = api.getAccounts()
 
