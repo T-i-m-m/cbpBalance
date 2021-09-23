@@ -40,10 +40,6 @@ def printHelp():
     print ("\n")
 
 try:
-    
-    log_filename = "Rey-portfolio.csv"
-    market_filename = 'Rey-markets.list'
-    
     if len(sys.argv) != 3 and sys.argv[1] != '--list' and sys.argv[1] != '--log':
         raise Exception(f"Arguments missing. E.g. base and quote currency (e.g. DOT EUR)")
 
@@ -99,7 +95,7 @@ try:
 
                 with open(market_filename,'r') as market_file:
                     markets = market_file.read().splitlines()
-                    #markets = market_file.readlines().rstrip('\n')
+                markets = filter(None, markets)
 
                 # iterate throug all markets defined in Rey-market.list
                 for market in markets:                    
@@ -123,14 +119,14 @@ try:
                         df[market + ' value (EUR)'] =  0.0
                                 
                 df.loc[0, 'total balance (EUR)'] = round(total_balance, 2)
-                print(df)
         
                 # create file if it does not exist yet!
-                df.to_csv(log_filename)                
-                #df.to_csv(log_file, mode='a', header=False)
-        
-        
-                    
+                log_file = Path(log_filename)
+                if log_file.is_file():
+                    df.to_csv(log_file, mode='a', header=False)
+                else:
+                    df.to_csv(log_filename)
+
             else:
                 balanceBase = 0
                 balanceQuote = 0
